@@ -107,10 +107,11 @@ def stats(puid: str=None) -> str:
         name = getUserByPuid(puid)
         user_corpus = [item for item in corpus if item['user'] == name]
         user_n = len(user_corpus)
-        user_texts = [item['text'] for item in user_corpus]
+        user_texts = [item['text']
+                      for item in user_corpus if item['text'] is not None]
         user_chars = sum(len(item) for item in user_texts)
         stats = '''{} 老师今天刷了 {} 条，共 {} 字
-平均每条 {.2f} 字
+平均每条 {:.2f} 字
         '''.format(name, user_n, user_chars, user_chars/user_n)
         return stats
 
