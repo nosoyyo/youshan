@@ -36,7 +36,7 @@ youshan = {'group': '2082f7f0',
            'ly': '68a9c4c9',
            'ch': 'd328a12e',
            'shr': '0b4f46fa',
-           'gc': '01f0700d',
+           'gc': '0a4b095f',
            'dg': '73b7c671',
            'hyh': 'd1adaecd',
            'bjh': '55d92152',
@@ -66,15 +66,15 @@ def genMsgId() -> str:
 
 
 def stats(puid: str=None) -> str:
-    corpus = getCorpus('today')
-    today_n = len(corpus)
+    corpus_today = getCorpus('today')
+    today_n = len(corpus_today)
     if not puid:
         sds = {}
         sd_names = list(youshan)
         sd_names.pop(0)
         sd_rank = {}
         for sd in sd_names:
-            sds[sd] = [item for item in corpus if item['user'] is sd]
+            sds[sd] = [item for item in corpus_today if item['user'] is sd]
             sd_rank[sd] = len(sds[sd])
         sd_rank = {value: key for key, value in sd_rank.items()}
         sd_rank = SortedDict(sd_rank)
@@ -92,7 +92,7 @@ def stats(puid: str=None) -> str:
         return chart
     elif puid:
         name = getUserByPuid(puid)
-        user_corpus = [item for item in corpus if item['user'] == name]
+        user_corpus = [item for item in corpus_today if item['user'] == name]
         user_n = len(user_corpus)
         user_texts = [item['text']
                       for item in user_corpus if item['text'] is not None]
@@ -102,16 +102,22 @@ def stats(puid: str=None) -> str:
                 max_chars = item
 
         user_chars = sum(len(item) for item in user_texts)
-        stats = '''{} 老师今天刷了 {} 条，共 {} 字
-平均每条 {:.2f} 字
-最长一条 {} 字，内容如下：
-{}
+
+        my_kw_today = '\n'.join(jieba.analyse.textrank(
+            getCorpus('raw_puid_today', puid), topK=10, withWeight=False, allowPOS=('ns', 'n')))
+
+        stats = '''{0} 老师今天刷了 {1} 条，共 {2} 字
+平均每条 {3:.2f} 字
+最长一条 {4} 字，内容如下：
+{5}\n
+{0} 老师的今日关键词：\n
+{6}
         '''.format(name, user_n, user_chars, user_chars/user_n,
-                   len(max_chars), max_chars)
+                   len(max_chars), max_chars, my_kw_today)
         return stats
 
 
-def getCorpus(arg='today'):
+def getCorpus(arg='today', puid: str=None):
     '''
     :param `today`: `list` return a list of dict like
     {'serial': '164',
@@ -120,7 +126,9 @@ def getCorpus(arg='today'):
     'time': 1528996039.0,
     'type': 'Text',
     'text': '回不来了，已经晚了'}
-    :param `raw_today`: `str` return a str of everything people said
+    :param `raw_today`: `str` return everything people said today
+    :param `raw_alltime`: `str` return everything people said since day0
+    :param `raw_puid_today`: `str` return everything a certain people said today
     '''
     with open('db', 'r') as f:
         all_dict = f.read().split('\n')
@@ -138,6 +146,12 @@ def getCorpus(arg='today'):
         corpus_all = [eval(item.split(' = ')[1]) for item in all_dict]
         return ''.join(
             [item['text'] for item in corpus_all if item['text'] is not None])
+    elif arg == 'raw_puid_today':
+        name = getUserByPuid(puid)
+        user_corpus = [item for item in corpus_today if item['user'] == name]
+        user_texts = [item['text']
+                      for item in user_corpus if item['text'] is not None]
+        return ''.join(user_texts)
 
 
 def groupKeyword(arg: str='today') -> str:
@@ -177,18 +191,33 @@ def getQuery(msg: Message) -> list:
     names = msg.text.replace('\u2005', '').split('@')[2:]
     if names:
         return [the_group.search(name)[0].puid for name in names]
+    elif '\u2005' in msg.text:
+        return msg.text.split('\u2005')[1]
+
+
+def isPuid(queries):
+    if isinstance(queries, list):
+        for query in queries:
+            if str(eval('0x'+query)).isdigit():
+                return True
     else:
-        return msg.text.split(' ')[1]
+        return False
 
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
 
+    # detect if gc puid changed
+    if msg.member.puid not in list(youshan.values()):
+        youshan['gc'] = msg.member.pu
+
+    time.sleep(1)
     if msg.chat.puid == the_group.puid:
         print(msg)
         persistize(msg)
 
         if msg.is_at:
+            # queries: `['154f50b4', '30b3c33f9']`
             queries = getQuery(msg)
             if not queries:
                 the_group.send(stats())
@@ -200,7 +229,9 @@ def deal(msg):
                 the_group.send(stats(msg.member.puid))
             elif '群统计' in queries:
                 the_group.send(stats())
-            else:
+            elif isPuid(queries):
                 for query in queries:
                     # :query: `puid`: str
-                    return stats(query)
+                    the_group.send(stats(query))
+            else:
+                the_group.send('你整的这是啥？')
