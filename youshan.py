@@ -74,34 +74,18 @@ def stats(puid: str=None) -> str:
         sd_rank = {}
         for sd in sd_names:
             sds[sd] = [item for item in corpus if item['user'] is sd]
-        for sd in sd_names:
             sd_rank[sd] = len(sds[sd])
         sd_rank = {value: key for key, value in sd_rank.items()}
         sd_rank = SortedDict(sd_rank)
-        chart = '''今天贵群刷了{}条:
-第一名：{} 老师 {} 条
-第二名：{} 老师 {} 条
-第三名：{} 老师 {} 条
-第四名：{} 老师 {} 条
-第五名：{} 老师 {} 条
-第六名：{} 老师 {} 条        
-第七名：{} 老师 {} 条'''.format(
-            today_n,
-            sd_rank[list(sd_rank)[-1]],
-            list(sd_rank)[-1],
-            sd_rank[list(sd_rank)[-2]],
-            list(sd_rank)[-2],
-            sd_rank[list(sd_rank)[-3]],
-            list(sd_rank)[-3],
-            sd_rank[list(sd_rank)[-4]],
-            list(sd_rank)[-4],
-            sd_rank[list(sd_rank)[-5]],
-            list(sd_rank)[-5],
-            sd_rank[list(sd_rank)[-6]],
-            list(sd_rank)[-6],
-            sd_rank[list(sd_rank)[-7]],
-            list(sd_rank)[-7],
-        )
+        chart_title = '今天贵群刷了{}条:\n'
+        charts = []
+        sd_rank_list = list(sd_rank)
+        sd_name_list = list(sd_rank.values())
+        for i in range(len(sd_names)):
+            chart_content = '#{} {} 老师 {} 条'.format(
+                i+1, sd_name_list.pop(), sd_rank_list.pop())
+            charts.append(chart_content)
+        chart = chart_title + '\n'.join(charts)
         return chart
     elif puid:
         name = getUserByPuid(puid)
