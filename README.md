@@ -1,2 +1,3 @@
 # youshan
-only for a certain wechat group
+
+Backend of group chat helper.

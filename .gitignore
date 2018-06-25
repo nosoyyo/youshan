@@ -1,5 +1,7 @@
 # user custom
-
+node_modules/
+package.json
+yarn.lock
 archived/
 .vscode/
 db

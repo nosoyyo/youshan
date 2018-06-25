@@ -30,22 +30,19 @@ def reLogin():
 
 
 bot = Bot(cache_path=True, login_callback=aloha, logout_callback=reLogin)
-bot.enable_puid()
 
-youshan = {'group': '2082f7f0',
-           'ly': '68a9c4c9',
-           'ch': 'd328a12e',
-           'shr': '0b4f46fa',
-           'gc': '0a4b095f',
-           'dg': '73b7c671',
-           'hyh': 'd1adaecd',
-           'bjh': '55d92152',
-           }
+the_group = bot.search('友善')[0]
 
-the_group = bot.search(puid='2082f7f0')[0]
+
+def getNamePuidDict():
+    bot.enable_puid()
+    name_list = [m.nick_name for m in the_group.members]
+    puid_list = [m.puid for m in the_group.members]
+    return dict(zip(name_list, puid_list))
 
 
 def getUserByPuid(puid: str) -> str:
+    youshan = getNamePuidDict()
     return tuple(youshan)[list(youshan.values()).index(puid)]
 
 
@@ -68,13 +65,13 @@ def genMsgId() -> str:
 def stats(puid: str=None) -> str:
     corpus_today = getCorpus('today')
     today_n = len(corpus_today)
+    youshan = getNamePuidDict()
     if not puid:
         sds = {}
         sd_names = list(youshan)
-        sd_names.pop(0)
         sd_rank = {}
         for sd in sd_names:
-            sds[sd] = [item for item in corpus_today if item['user'] is sd]
+            sds[sd] = [item for item in corpus_today if item['user'] == sd]
             sd_rank[sd] = len(sds[sd])
         sd_rank = {value: key for key, value in sd_rank.items()}
         sd_rank = SortedDict(sd_rank)
@@ -84,7 +81,7 @@ def stats(puid: str=None) -> str:
         charts = []
         sd_rank_list = list(sd_rank)
         sd_name_list = list(sd_rank.values())
-        for i in range(len(sd_names)):
+        for i in range(len(sd_rank)):
             chart_content = '#{} {} 老师 {} 条'.format(
                 i+1, sd_name_list.pop(), sd_rank_list.pop())
             charts.append(chart_content)
@@ -104,7 +101,10 @@ def stats(puid: str=None) -> str:
         user_chars = sum(len(item) for item in user_texts)
 
         my_kw_today = '\n'.join(jieba.analyse.textrank(
-            getCorpus('raw_puid_today', puid), topK=10, withWeight=False, allowPOS=('ns', 'n')))
+            getCorpus('raw_puid_today', puid),
+            topK=10,
+            withWeight=False,
+            allowPOS=('ns', 'n')))
 
         stats = '''{0} 老师今天刷了 {1} 条，共 {2} 字
 平均每条 {3:.2f} 字
@@ -128,7 +128,7 @@ def getCorpus(arg='today', puid: str=None):
     'text': '回不来了，已经晚了'}
     :param `raw_today`: `str` return everything people said today
     :param `raw_alltime`: `str` return everything people said since day0
-    :param `raw_puid_today`: `str` return everything a certain people said today
+    :param `raw_puid_today`: `str` return everything a certain dude said today
     '''
     with open('db', 'r') as f:
         all_dict = f.read().split('\n')
@@ -193,6 +193,8 @@ def getQuery(msg: Message) -> list:
         return [the_group.search(name)[0].puid for name in names]
     elif '\u2005' in msg.text:
         return msg.text.split('\u2005')[1]
+    else:
+        return msg.text.split(' ')[-1]
 
 
 def isPuid(queries):
@@ -206,6 +208,8 @@ def isPuid(queries):
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
+
+    youshan = getNamePuidDict()
 
     # detect if gc puid changed
     if msg.member.puid not in list(youshan.values()):
@@ -234,4 +238,4 @@ def deal(msg):
                     # :query: `puid`: str
                     the_group.send(stats(query))
             else:
-                the_group.send('你整的这是啥？')
+                the_group.send('你想干啥？')
