@@ -4,9 +4,12 @@ from datetime import datetime
 from sortedcontainers import SortedDict
 
 from wxpy import *
+from query import Query
+from corpus import Corpus
 
-global LOGGEDIN
+
 LOGGEDIN = False
+INTERVAL = 300
 
 
 def aloha():
@@ -42,8 +45,8 @@ def getNamePuidDict():
 
 
 def getUserByPuid(puid: str) -> str:
-    youshan = getNamePuidDict()
-    return tuple(youshan)[list(youshan.values()).index(puid)]
+    return tuple(getNamePuidDict())[
+        list(getNamePuidDict().values()).index(puid)]
 
 
 def formatToday() -> str:
@@ -146,6 +149,8 @@ def getCorpus(arg='today', puid: str=None):
         corpus_all = [eval(item.split(' = ')[1]) for item in all_dict]
         return ''.join(
             [item['text'] for item in corpus_all if item['text'] is not None])
+    elif arg == 'puid_today':
+        return [m for m in corpus_today if m['user'] == getUserByPuid(puid)]
     elif arg == 'raw_puid_today':
         name = getUserByPuid(puid)
         user_corpus = [item for item in corpus_today if item['user'] == name]
@@ -183,20 +188,6 @@ def persistize(msg):
     return True
 
 
-def getQuery(msg: Message) -> list:
-    '''
-    return a list of puid: str, like
-    ['01f0700d', 73b7c671']
-    '''
-    names = msg.text.replace('\u2005', '').split('@')[2:]
-    if names:
-        return [the_group.search(name)[0].puid for name in names]
-    elif '\u2005' in msg.text:
-        return msg.text.split('\u2005')[1]
-    else:
-        return msg.text.split(' ')[-1]
-
-
 def isPuid(queries):
     if isinstance(queries, list):
         for query in queries:
@@ -206,36 +197,85 @@ def isPuid(queries):
         return False
 
 
+def getTiming(puid: str):
+    '''
+    Separators look like
+    `SortedDict({6: 1033.0, 7: 406.0, 11: 752.0, 23: 605.0, 25: 552.0})`
+
+    A `separator` is a special `delta` that's bigger than `INTERVAL`
+    the key in the SortedDict is the index
+    `INTERVAL` is set as a global var, `300` by default
+
+    `delta` = `msg[i]['time'] - msg[i-1]['time']`
+
+    Thus, for instance, an item like `{6:1033.0}` indicates that
+    it is generated via `msg[7] - msg[6]`, therefore the 6th time delta
+    in the `delta_list`
+
+    And as the 1st separator in `separators`, the 1st `time_block` could be
+    formed with `corpus[:7]` i.e. `corpus[:list(separators)[0]+1]`
+    '''
+    global INTERVAL
+    name = getUserByPuid(puid)
+    corpus = getCorpus('puid_today', puid)
+    time_nodes = [m['time'] for m in corpus if m['user'] == name]
+
+    if time_nodes == 0:
+        return '{}老师今天还未出现！'.format(name)
+
+    delta_list = []
+    for i in range(len(time_nodes)):
+        if i > 0:
+            delta_list.append(time_nodes[i] - time_nodes[i-1])
+    separators = SortedDict([(delta_list.index(delta), delta)
+                             for delta in delta_list if delta > INTERVAL])
+
+    n_time_blocks = len(separators) + 1
+    # list(separators)[0]: the last msg from the 1st time_block
+    # list(separators)[-1] the last msg from time_blocks[-2] if
+    # TODO: time_blocks = []
+    now = time.time()
+    last_seen = corpus[-1]['time']
+    if now - last_seen > INTERVAL:
+        if (now - last_seen)/60 >= 60:
+            h = str((now - last_seen)/3600).split('.')[0]
+            m = '{:.0f}'.format((now - last_seen)/60 % 60)
+            conclusion = '{}老师今天出现{}次，最近一次是 {} 小时 {} 分钟前'.format(
+                name, n_time_blocks, h, m)
+        else:
+            m = '{:.0f}'.format((now - last_seen)/60 % 60)
+            conclusion = '{}老师今天出现{}次，最近一次是 {} 分钟前'.format(
+                name, n_time_blocks, m)
+        return conclusion
+    else:
+        conclusion = '{}老师今天出现{}次，当前还在线呢'.format(
+            name, n_time_blocks)
+        return conclusion
+
+
 @bot.register(Group, None, except_self=False)
 def deal(msg):
 
-    youshan = getNamePuidDict()
-
-    # detect if gc puid changed
-    if msg.member.puid not in list(youshan.values()):
-        youshan['gc'] = msg.member.pu
-
-    time.sleep(1)
     if msg.chat.puid == the_group.puid:
         print(msg)
         persistize(msg)
 
-        if msg.is_at:
-            # queries: `['154f50b4', '30b3c33f9']`
-            queries = getQuery(msg)
-            if not queries:
-                the_group.send(stats())
-            elif '今日关键词' in queries:
+        if '在吗' in msg.text:
+            if Query.isCommand(msg):
+                puid = the_group.search(Query.name)[0].puid
+                the_group.send(getTiming(puid))
+                return
+        elif msg.is_at:
+            time.sleep(0.5)
+            query = Query(msg)
+            if '今日关键词' in query.command:
                 the_group.send(groupKeyword('today'))
-            elif '全部关键词' in queries:
+            elif '全部关键词' in query.command:
                 the_group.send(groupKeyword('alltime'))
-            elif '我的统计' in queries:
+            elif '我的统计' in query.command:
                 the_group.send(stats(msg.member.puid))
-            elif '群统计' in queries:
+            elif '群统计' in query.command:
                 the_group.send(stats())
-            elif isPuid(queries):
-                for query in queries:
-                    # :query: `puid`: str
-                    the_group.send(stats(query))
             else:
+                time.sleep(0.5)
                 the_group.send('你想干啥？')
