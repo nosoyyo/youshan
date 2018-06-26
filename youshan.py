@@ -51,7 +51,6 @@ def getUserByPuid(puid: str) -> str:
 
 def formatToday() -> str:
     ahora = datetime.now()
-
     def zero(inp: int) -> str:
         if len(str(inp)) != 2:
             return '0' + str(inp)
@@ -78,7 +77,6 @@ def stats(puid: str=None) -> str:
             sd_rank[sd] = len(sds[sd])
         sd_rank = {value: key for key, value in sd_rank.items()}
         sd_rank = SortedDict(sd_rank)
-
         # build chart
         chart_title = '今天贵群刷了{}条:\n'.format(today_n)
         charts = []
@@ -100,15 +98,12 @@ def stats(puid: str=None) -> str:
         for item in user_texts:
             if len(item) > len(max_chars):
                 max_chars = item
-
         user_chars = sum(len(item) for item in user_texts)
-
         my_kw_today = '\n'.join(jieba.analyse.textrank(
             getCorpus('raw_puid_today', puid),
             topK=10,
             withWeight=False,
             allowPOS=('ns', 'n')))
-
         stats = '''{0} 老师今天刷了 {1} 条，共 {2} 字
 平均每条 {3:.2f} 字
 最长一条 {4} 字，内容如下：
@@ -201,17 +196,13 @@ def getTiming(puid: str):
     '''
     Separators look like
     `SortedDict({6: 1033.0, 7: 406.0, 11: 752.0, 23: 605.0, 25: 552.0})`
-
     A `separator` is a special `delta` that's bigger than `INTERVAL`
     the key in the SortedDict is the index
     `INTERVAL` is set as a global var, `300` by default
-
     `delta` = `msg[i]['time'] - msg[i-1]['time']`
-
     Thus, for instance, an item like `{6:1033.0}` indicates that
-    it is generated via `msg[7] - msg[6]`, therefore the 6th time delta
+    it is generated via `msg[7] - msg[6]`, therefore the 6th `delta`
     in the `delta_list`
-
     And as the 1st separator in `separators`, the 1st `time_block` could be
     formed with `corpus[:7]` i.e. `corpus[:list(separators)[0]+1]`
     '''
@@ -219,17 +210,14 @@ def getTiming(puid: str):
     name = getUserByPuid(puid)
     corpus = getCorpus('puid_today', puid)
     time_nodes = [m['time'] for m in corpus if m['user'] == name]
-
-    if time_nodes == 0:
+    if not time_nodes:
         return '{}老师今天还未出现！'.format(name)
-
     delta_list = []
     for i in range(len(time_nodes)):
         if i > 0:
             delta_list.append(time_nodes[i] - time_nodes[i-1])
     separators = SortedDict([(delta_list.index(delta), delta)
                              for delta in delta_list if delta > INTERVAL])
-
     n_time_blocks = len(separators) + 1
     # list(separators)[0]: the last msg from the 1st time_block
     # list(separators)[-1] the last msg from time_blocks[-2] if
@@ -255,11 +243,9 @@ def getTiming(puid: str):
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
-
     if msg.chat.puid == the_group.puid:
         print(msg)
         persistize(msg)
-
         if '在吗' in msg.text:
             if Query.isCommand(msg):
                 puid = the_group.search(Query.name)[0].puid
