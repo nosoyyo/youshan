@@ -1,15 +1,17 @@
 import time
+import redis
 import jieba.analyse
 from datetime import datetime
-from sortedcontainers import SortedDict
 
-from wxpy import *
+from wxpy import Bot
 from query import Query
-from corpus import Corpus
 
 
 LOGGEDIN = False
 INTERVAL = 300
+RETRY_LOGIN = 3
+
+r = redis.Redis(decode_responses=True)
 
 
 def aloha():
@@ -25,7 +27,7 @@ def reLogin():
     print('logged out')
     print('LOGGEDIN is ' + str(LOGGEDIN))
     time.sleep(1)
-    for i in range(3):
+    for i in range(len(RETRY_LOGIN)):
         bot = Bot(cache_path=True, login_callback=aloha,
                   logout_callback=reLogin)
         if LOGGEDIN:
@@ -39,7 +41,7 @@ the_group = bot.search('友善')[0]
 
 def getNamePuidDict():
     bot.enable_puid()
-    name_list = [m.nick_name for m in the_group.members]
+    name_list = [m.is_friend.remark_name for m in the_group.members]
     puid_list = [m.puid for m in the_group.members]
     return dict(zip(name_list, puid_list))
 
@@ -51,6 +53,7 @@ def getUserByPuid(puid: str) -> str:
 
 def formatToday() -> str:
     ahora = datetime.now()
+
     def zero(inp: int) -> str:
         if len(str(inp)) != 2:
             return '0' + str(inp)
