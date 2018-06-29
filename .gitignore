@@ -1,4 +1,5 @@
 # user custom
+config.py
 node_modules/
 package.json
 yarn.lock

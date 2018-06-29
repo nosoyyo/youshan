@@ -2,7 +2,12 @@ class Query():
     '''
     :param msg: `obj` wxpy.Message object
     '''
-    commands = ['我的统计', '群统计', '今日关键词', '全部关键词', '在吗']
+    commands = ['我的统计',
+                '群统计',
+                '今日关键词',
+                '全部关键词',
+                '在吗',
+                ]
 
     def __init__(self, msg):
         self.command = None
