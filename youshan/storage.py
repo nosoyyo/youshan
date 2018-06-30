@@ -46,7 +46,6 @@ def saveOnDisk(msg):
     return True
 
 
-
 def getCorpus(arg='today', puid: str=None):
     '''
     Deprecated.
@@ -89,10 +88,10 @@ def getCorpus(arg='today', puid: str=None):
         return ''.join(user_texts)
 
 
-
 def persistize(msg):
     '''
     TODO Transaction
+    TODO is transaction necessary?
     '''
     saveOnDisk(msg)
     recv_time = time.time()

@@ -71,10 +71,10 @@ def getTiming(user: User):
     # name = getUserByPuid(puid) -> user.name
     user.uuid = user.r.hget(user.group.puid, user.nick_name)
     user.keys = user.r.lrange(f'{user.uuid}{formatToday()}', 0, -1)
+    if not user.keys:
+        return '{}老师今天还未出现！'.format(user.name)
     user.corpus = user.r.hmget(user.group.puid, user.keys)
     time_nodes = user.keys
-    if not time_nodes:
-        return '{}老师今天还未出现！'.format(user.name)
     delta_list = []
     for i in range(len(time_nodes)):
         if i > 0:

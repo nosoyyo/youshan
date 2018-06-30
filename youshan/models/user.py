@@ -8,6 +8,8 @@ class User(Base):
 
     def __init__(self, intake):
         self.is_friend = None
+        # assert hasattr `group`
+        self.group = intake.group
 
         if hasattr(intake, 'member'):
             if intake.member.is_friend:
@@ -33,9 +35,6 @@ class User(Base):
 
         if hasattr(member, 'display_name'):
             self.display_name = member.display_name
-
-        if hasattr(member, 'group'):
-            self.group = member.group
 
     def __repr__(self):
         return f'<User instance of {self.nick_name}, puid {self.puid}>'
