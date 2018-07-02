@@ -8,16 +8,18 @@ class User(Base):
 
     def __init__(self, intake):
         self.is_friend = None
-        # assert hasattr `group`
-        self.group = intake.group
 
+        # intake: msg
         if hasattr(intake, 'member'):
+            self.group = intake.member.group
             if intake.member.is_friend:
                 member = intake.member.is_friend
                 self.is_friend = True
             else:
                 member = intake.member
+        # intake: member
         elif hasattr(intake, 'is_friend'):
+            self.group = intake.group
             if intake.is_friend:
                 member = intake.is_friend
                 self.is_friend = True
