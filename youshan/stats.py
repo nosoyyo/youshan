@@ -14,11 +14,11 @@ def stats(msg, user: User=None) -> str:
         # build chart
         group = theGroup(msg)
         raw_data = group.r.zscan(f'{group.puid}{formatToday()}freq')[1]
-        chart_title = '今天贵群刷了{}条:\n'.format(raw_data.pop()[1])
+        chart_title = '今天贵群刷了{:.0f}条:\n'.format(raw_data.pop()[1])
         charts = []
         for i in range(len(raw_data)):
             item = raw_data.pop()
-            chart_content = '#{} {} 老师 {} 条'.format(
+            chart_content = '#{} {} 老师 {:.0f} 条'.format(
                 i+1, group.r.hget(group.puid, item[0]), item[1])
             charts.append(chart_content)
         chart = chart_title + '\n'.join(charts)
@@ -38,7 +38,7 @@ def stats(msg, user: User=None) -> str:
             topK=10,
             withWeight=False,
             allowPOS=('ns', 'n')))
-        stats = '''{0} 老师今天刷了 {1} 条，共 {2} 字
+        stats = '''{0} 老师今天刷了 {1:.0f} 条，共 {2} 字
 平均每条 {3:.2f} 字
 最长一条 {4} 字，内容如下：
 {5}\n

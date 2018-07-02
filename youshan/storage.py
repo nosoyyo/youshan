@@ -107,3 +107,7 @@ def persistize(msg):
                 f'{user.group.puid}{formatToday()}freq', user.group.puid)
     except Exception as e:
         print(e)
+
+
+def migrate():
+    pass
