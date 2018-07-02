@@ -38,8 +38,10 @@ class User(Base):
         if hasattr(member, 'display_name'):
             self.display_name = member.display_name
 
+        self.getUUID()
+
     def __repr__(self):
         return f'<User instance of {self.nick_name}, puid {self.puid}>'
 
     def getUUID(self):
-        raise NotImplementedError
+        self.uuid = self.r.hget(self.group.puid, self.nick_name)
