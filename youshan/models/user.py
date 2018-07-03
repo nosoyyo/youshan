@@ -44,4 +44,4 @@ class User(Base):
         return f'<User instance of {self.nick_name}, puid {self.puid}>'
 
     def getUUID(self):
-        self.uuid = self.r.hget(self.group.puid, self.nick_name)
+        self.uuid = self.r.hget(self.group.uuid, self.nick_name)

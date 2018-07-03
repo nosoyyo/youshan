@@ -96,15 +96,16 @@ def persistize(msg):
     saveOnDisk(msg)
     recv_time = time.time()
     user = User(msg)
+    user.group = theGroup(user.group)
     try:
-        if user.r.hset(user.group.puid, recv_time, msg.text):
+        if user.r.hset(user.group.uuid, recv_time, msg.text):
             user.uuid = user.r.hget(
-                user.group.puid, user.nick_name) or uuid4().__str__()
-            user.r.hset(user.group.puid, user.nick_name, user.uuid)
+                user.group.uuid, user.nick_name) or uuid4().__str__()
+            user.r.hset(user.group.uuid, user.nick_name, user.uuid)
             user.r.rpush(f'{user.uuid}{formatToday()}', recv_time)
-            user.r.zincrby(f'{user.group.puid}{formatToday()}freq', user.uuid)
+            user.r.zincrby(f'{user.group.uuid}{formatToday()}freq', user.uuid)
             user.r.zincrby(
-                f'{user.group.puid}{formatToday()}freq', user.group.puid)
+                f'{user.group.uuid}{formatToday()}freq', user.group.uuid)
     except Exception as e:
         print(e)
 

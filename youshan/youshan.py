@@ -2,14 +2,27 @@ import time
 from wxpy import Bot, Group
 from uuid import uuid4
 
-from models import User, Query
+from models import User, Query, theGroup
 from storage import persistize
 from stats import stats, getTiming
 from youshan import aloha, reLogin
 from contribution import contrib
 
 
+DGBUG = True
 bot = Bot(cache_path=True, login_callback=aloha, logout_callback=reLogin)
+
+
+def registerGroup(msg, cmd):
+    group = theGroup(msg)
+    if cmd == 'on':
+        if group.uuid in group.r.lrange('registered_groups', 0, -1):
+            return '已开启'
+        group.rpush('registered_groups', group.uuid)
+        initGroup(group)
+        return '已开启'
+    elif cmd == 'off':
+        pass
 
 
 def getTheGroup():
@@ -26,15 +39,21 @@ def initGroup(group):
     for member in group.members:
         user = User(member)
         user.uuid = user.r.hget(
-            group.puid, user.nick_name) or uuid4().__str__()
-        user.r.hset(group.puid, user.nick_name, user.uuid)
-        user.r.hset(group.puid, user.uuid, user.nick_name)
+            group.uuid, user.nick_name) or uuid4().__str__()
+        user.r.hset(group.uuid, user.nick_name, user.uuid)
+        user.r.hset(group.uuid, user.uuid, user.nick_name)
 
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
     the_group = getTheGroup()
-    if msg.chat.puid == the_group.puid:
+    # register & init group
+    # if msg.text == '开启统计功能':
+    #     the_group.send(registerGroup(msg, 'on'))
+    # elif msg.text == '关闭统计功能':
+    #     the_group.send(registerGroup(msg, 'off'))
+
+    if '友善' in msg.member.group.name:
         print(msg)
         persistize(msg)
         if msg.text is not None and '在吗' in msg.text:
