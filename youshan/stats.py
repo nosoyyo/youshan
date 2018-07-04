@@ -11,6 +11,9 @@ INTERVAL = 300
 
 def stats(msg, user: User=None) -> str:
     group = theGroup(msg)
+    for u in group.members:
+        u.uuid = theGroup.getUserUUID(u)
+
     if not user:
         # build chart
         raw_data = group.r.zscan(f'{group.uuid}{formatToday()}freq')[1]
@@ -50,7 +53,7 @@ def stats(msg, user: User=None) -> str:
         else:
             return chart
     elif user:
-        user.uuid = user.r.hget(group.uuid, user.nick_name)
+        user.uuid = user.r.hget(group.uuid, user.remark_name)
         user.keys = user.r.lrange(f'{user.uuid}{formatToday()}', 0, -1)
         if not user.keys:
             return f'{user.nick_name}老师还没发言。'
@@ -97,7 +100,7 @@ def getTiming(user: User):
     formed with `corpus[:7]` i.e. `corpus[:list(separators)[0]+1]`
     '''
     # name = getUserByPuid(puid) -> user.name
-    user.uuid = user.r.hget(theGroup.uuid, user.nick_name)
+    user.uuid = user.r.hget(theGroup.uuid, user.remark_name)
     user.keys = user.r.lrange(f'{user.uuid}{formatToday()}', 0, -1)
     if not user.keys:
         return '{}老师今天还未出现！'.format(user.name)
