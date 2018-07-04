@@ -7,7 +7,7 @@ class User(Base):
     '''
 
     def __init__(self, intake):
-        self.is_friend = None
+        self.is_friend = False
 
         # intake: msg
         if hasattr(intake, 'member'):
@@ -17,7 +17,6 @@ class User(Base):
                 self.is_friend = True
             else:
                 member = intake.member
-                self.is_friend = False
         # intake: member
         elif hasattr(intake, 'is_friend'):
             self.group = intake.group
@@ -26,7 +25,7 @@ class User(Base):
                 self.is_friend = True
             else:
                 member = intake
-                self.is_friend = False
+
         self.puid = member.puid
         self.name = member.name
         self.nick_name = member.nick_name
@@ -36,6 +35,11 @@ class User(Base):
             self.province = member.province
             self.gender = member.sex
             self.signature = member.signature
+            if member.is_friend.remark_name:
+                self.remark_name = member.is_friend.remark_name
+            else:
+                member.is_friend.set_remark_name(member.nick_name)
+                self.remark_name = member.nick_name
 
         if hasattr(member, 'display_name'):
             self.display_name = member.display_name
