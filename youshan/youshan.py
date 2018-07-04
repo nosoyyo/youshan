@@ -16,11 +16,15 @@ bot = Bot(cache_path=True, login_callback=aloha, logout_callback=reLogin)
 def registerGroup(msg, cmd):
     group = theGroup(msg)
     if cmd == 'on':
-        if group.uuid in group.r.lrange('registered_groups', 0, -1):
-            return '已开启'
-        group.rpush('registered_groups', group.uuid)
-        initGroup(group)
-        return '已开启'
+        if all([m.is_friend for m in group.members]):
+            if group.uuid not in group.r.lrange('registered_groups', 0, -1):
+                if initGroup(group):
+                    group.rpush('registered_groups', group.uuid)
+                    return '已开启'
+                else:
+                    return '群初始化失败'
+        else:
+            return '只支持在全部群员均为好友的群里使用'
     elif cmd == 'off':
         pass
 
@@ -33,15 +37,14 @@ def getTheGroup(msg) -> theGroup:
         # some tolerance on num of gmembers
         if 5 <= len(g.members) <= 10:
             friend_list = list(
-                filter(lambda x: x.is_friend, [m for m in g.members]))
+                filter(lambda m: m.is_friend, [m for m in g.members]))
             hashes = set(hash(f.is_friend.name) for f in friend_list)
             # normally
             if len(hashes) == len(target & hashes):
                 return theGroup(g)
-            # 1 person changed nick_name
-            # TODO
-            elif len(hashes) == len(target & hashes) - 1:
-                msg.member.group.send('检测到昵称变更，请查看')
+            # num of gmembers changing
+            elif len(hashes) != len(target & hashes):
+                msg.member.group.send('[debug]检测到人数或昵称变更')
                 return theGroup(g)
 
 

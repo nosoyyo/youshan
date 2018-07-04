@@ -17,6 +17,7 @@ class User(Base):
                 self.is_friend = True
             else:
                 member = intake.member
+                self.is_friend = False
         # intake: member
         elif hasattr(intake, 'is_friend'):
             self.group = intake.group
@@ -25,6 +26,7 @@ class User(Base):
                 self.is_friend = True
             else:
                 member = intake
+                self.is_friend = False
         self.puid = member.puid
         self.name = member.name
         self.nick_name = member.nick_name
