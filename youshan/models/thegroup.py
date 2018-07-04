@@ -18,7 +18,11 @@ class theGroup(Base):
         self.owner = User(intake.owner)
 
         if len(intake.members) > 0:
+            self.raw_members = intake.members
             self.members = [User(m) for m in intake.members]
 
     def __repr__(self):
         return f'<theGroup instance of {self.nick_name}, puid {self.puid}>'
+
+    def __eq__(self, obj):
+        return self.raw_members == obj.raw_members

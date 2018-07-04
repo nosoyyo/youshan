@@ -10,25 +10,28 @@ INTERVAL = 300
 
 
 def stats(msg, user: User=None) -> str:
+    group = theGroup(msg)
     if not user:
         # build chart
-        group = theGroup(msg)
-        group.uuid = '1a8ac0f3-dfed-4b35-a00d-5eca7312b8db'
-        raw_data = group.r.zscan(f'{group.puid}{formatToday()}freq')[1]
+        raw_data = group.r.zscan(f'{group.uuid}{formatToday()}freq')[1]
+        if not raw_data:
+            return '今天贵群还没开张！'
         chart_title = '今天贵群刷了{:.0f}条:\n'.format(raw_data.pop()[1])
         charts = []
-        for i in range(len(raw_data)):
-            item = raw_data.pop()
-            chart_content = '#{} {} 老师 {:.0f} 条'.format(
-                i+1, group.r.hget(group.uuid, item[0]), item[1])
-            charts.append(chart_content)
+        if len(raw_data) > 0:
+            for i in range(len(raw_data)):
+                item = raw_data.pop()
+                chart_content = '#{} {} 老师 {:.0f} 条'.format(
+                    i+1, group.r.hget(group.uuid, item[0]), item[1])
+                charts.append(chart_content)
         chart = chart_title + '\n'.join(charts)
 
         # get the longest disappearing guy
         ldg_flag = all(
             [bool(
                 group.r.lrange(
-                    f'{u.uuid}{formatToday()}', 0, -1)) for u in group.members])
+                    f'{u.uuid}{formatToday()}', 0, -1))
+             for u in group.members])
         if ldg_flag:
             ldg = SortedDict(
                 zip(
@@ -47,9 +50,11 @@ def stats(msg, user: User=None) -> str:
         else:
             return chart
     elif user:
-        user.uuid = user.r.hget(user.group.puid, user.nick_name)
+        user.uuid = user.r.hget(group.uuid, user.nick_name)
         user.keys = user.r.lrange(f'{user.uuid}{formatToday()}', 0, -1)
-        user.corpus = user.r.hmget(user.group.puid, user.keys)
+        if not user.keys:
+            return f'{user.nick_name}老师还没发言。'
+        user.corpus = user.r.hmget(group.uuid, user.keys)
         max_chars = ''
         for item in user.corpus:
             if item is not None and len(item) > len(max_chars):
@@ -92,11 +97,11 @@ def getTiming(user: User):
     formed with `corpus[:7]` i.e. `corpus[:list(separators)[0]+1]`
     '''
     # name = getUserByPuid(puid) -> user.name
-    user.uuid = user.r.hget(user.group.puid, user.nick_name)
+    user.uuid = user.r.hget(theGroup.uuid, user.nick_name)
     user.keys = user.r.lrange(f'{user.uuid}{formatToday()}', 0, -1)
     if not user.keys:
         return '{}老师今天还未出现！'.format(user.name)
-    user.corpus = user.r.hmget(user.group.puid, user.keys)
+    user.corpus = user.r.hmget(theGroup.uuid, user.keys)
     time_nodes = user.keys
     delta_list = []
     for i in range(len(time_nodes)):
