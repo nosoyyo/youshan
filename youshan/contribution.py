@@ -101,5 +101,28 @@ def getBiggestShade(shades: list) -> tuple:
     return ([i for i in shades if i and i[0] == key][0], result[key])
 
 
+def getLongestShade(shades: list) -> tuple:
+    '''
+    Return a tuple of two elements
+    :tuple[0]: a `list` of lattices, therefore a shade
+    :tuple[1]: the length of the shade
+
+    :param shades: `list` of a `list`
+    '''
+    result = {}
+    for shade in shades:
+        result.update({shade[0]: len(shade)})
+    key = [key for key in result.keys() if result[key] ==
+           sorted(list(result.values()))[-1]][0]
+    return ([i for i in shades if i and i[0] == key][0], result[key])
+
+
 def contrib(msg):
-    pass
+    '''
+    '''
+    # build shades
+    shades = buildShades(msg)
+    bs = getBiggestShade(shades)
+    ls = getLongestShade(shades)
+
+    # 
