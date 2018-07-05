@@ -1,4 +1,11 @@
 from .base import Base
+from utils import formatToday
+
+
+class theGroupNotDynamicallyLoaded(Exception):
+
+    def __init__(self):
+        print('Seems that the group has no UUID.')
 
 
 class User(Base):
@@ -46,3 +53,20 @@ class User(Base):
 
     def __repr__(self):
         return f'<User instance of {self.nick_name}>'
+
+    def buildUserCorpus(self, day: str=formatToday()):
+        '''
+        Must has `uuid`
+        Manually zip(self.corpus_keys, self.corpus_values) when using
+
+        :param day: like `20180705`
+        '''
+        if not hasattr(self, 'uuid'):
+            try:
+                self.group.getUserUUID(self)
+            except AttributeError:
+                raise theGroupNotDynamicallyLoaded()
+
+        self.corpus_keys = tuple(self.r.lrange(f'{self.uuid}{day}', 0, -1))
+        self.corpus_values = (self.r.hget(self.group.uuid, key)
+                              for key in self.corpus_keys)

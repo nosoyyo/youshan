@@ -23,8 +23,11 @@ class theGroup(Base):
             self.raw_members = intake.members
             self.members = [User(m) for m in intake.members]
 
+        for user in self.members:
+            user.group = self
+
     def __repr__(self):
-        return f'<theGroup instance of {self.nick_name}, puid {self.puid}>'
+        return f'<theGroup instance of {self.nick_name}>'
 
     def __eq__(self, obj):
         return self.raw_members == obj.raw_members
@@ -65,7 +68,7 @@ class theGroup(Base):
         elif cmd == 'off':
             pass
 
-    def initGroup(group):
+    def initGroup(self, group):
         '''
         Only call this when 1st time init a group,
         meanwhile no user has an uuid
@@ -78,6 +81,7 @@ class theGroup(Base):
             user.r.hset(group.uuid, user.uuid, user.remark_name)
 
     @classmethod
-    def getUserUUID(cls, user):
+    def getUserUUID(cls, user) -> str:
         # self.group need to be dynamically loaded
-        return cls.r.hget(cls.uuid, user.remark_name)
+        user.uuid = cls.r.hget(cls.uuid, user.remark_name)
+        return user.uuid

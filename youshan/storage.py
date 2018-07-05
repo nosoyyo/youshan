@@ -61,5 +61,10 @@ def persistize(msg):
             user.r.zincrby(f'{user.group.uuid}{formatToday()}freq', user.uuid)
             user.r.zincrby(
                 f'{user.group.uuid}{formatToday()}freq', user.group.uuid)
+
+        if msg.member.group.name != list(
+                user.r.hvals('group_name_history'))[-1]:
+            user.r.hset('group_name_history', recv_time, msg.member.group.name)
+
     except Exception as e:
         print(e)
