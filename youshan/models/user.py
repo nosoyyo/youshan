@@ -67,6 +67,7 @@ class User(Base):
             except AttributeError:
                 raise theGroupNotDynamicallyLoaded()
 
-        self.corpus_keys = tuple(self.r.lrange(f'{self.uuid}{day}', 0, -1))
+        self.corpus_keys = [float(key) for key in tuple(
+            self.r.lrange(f'{self.uuid}{day}', 0, -1))]
         self.corpus_values = (self.r.hget(self.group.uuid, key)
                               for key in self.corpus_keys)
