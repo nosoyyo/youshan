@@ -63,29 +63,42 @@ def buildShades(msg):
 
     # find all shades
     shades = []
-    for i in range(1, len(barriers), 2):
+    for i in range(1, len(barriers), 1):
         a, b = barriers[i-1], barriers[i]
         if list_set_alls[a:b] not in shades:
             shades.append(list_set_alls[a:b])
+    shades = [i for i in shades if len(i) > 1]
     return shades
 
-    def countShadeShowups(shade: list):
-        pass
 
-    def countShade(shades):
-        # count show_ups in each shade
-        shade_counts = {}
-        for shade in shades:
-            if shade:
-                s = sum([alls.count(show_up) for show_up in shade if show_up])
-                shade_counts.update({shade[0]: s})
+def countShadeShowUps(shade: list):
+    '''
+    Count all the `show_up`s with in a certain shade
 
-        # find the biggest shade
-        biggest_shade_starts_at = [i for i in shade_counts.keys(
-        ) if shade_counts[i] == sorted(shade_counts.values())[-1]][0]
+    :param shade: a `list` contains lattice nodes
+    '''
+    show_ups = 0
+    for u in group.members:
+        for key in u.show_ups:
+            if key in shade:
+                show_ups += 1
+    return show_ups
 
-        biggest_shade = [i for i in shades if i and i[0]
-                         == biggest_shade_starts_at][0]
+
+def getBiggestShade(shades: list) -> tuple:
+    '''
+    Return a tuple of two elements
+    :tuple[0]: a `list` of lattices, therefore a shade
+    :tuple[1]: the score of the shade
+
+    :param shades: `list` of a `list`
+    '''
+    result = {}
+    for shade in shades:
+        result.update({shade[0]: countShadeShowUps(shade)})
+    key = [key for key in result.keys() if result[key] ==
+           sorted(list(result.values()))[-1]][0]
+    return ([i for i in shades if i and i[0] == key][0], result[key])
 
 
 def contrib(msg):
