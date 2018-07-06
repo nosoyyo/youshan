@@ -14,7 +14,6 @@ class theGroup(Base):
 
         if not hasattr(intake, 'owner'):
             intake = intake.member.group
-        self.puid = intake.puid
         self.name = intake.name
         self.nick_name = intake.nick_name
         self.owner = User(intake.owner)

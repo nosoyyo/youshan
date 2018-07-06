@@ -1,4 +1,5 @@
 import time
+import random
 from functools import reduce
 
 from utils import formatToday
@@ -135,17 +136,49 @@ def getLongestShade(shades: list) -> tuple:
 
 def getShadeParticipants(group, shade: list) -> dict:
     '''
-    Return a `list` of `User` take part in `shade`
+    Return a `list` of `tuple` of two elements
+    :tuple[0]: `User` take part in `shade`
+    :tuple[1]: how many times he participated
 
+    :param group: `theGroup` instance
     :param shade: `list` of `lattice`
     '''
     participants = []
-    for u in group.members:
-        for lattice in shade:
+    for lattice in shade:
+        for u in group.members:
             if lattice in u.show_ups:
                 participants.append(u)
 
     return list(set([(i, participants.count(i)) for i in participants]))
+
+
+def initUserScore(group):
+    for u in group.members:
+        u.basic_score = 0
+        u.bonus_score = 0
+
+
+def addBasicScore(group):
+    for u in group.members:
+        u.basic_score += len(set(u.show_ups)) / \
+            (1+random.random()/len(group.members))
+
+
+def addBonusScore(participants):
+    '''
+    Must do this at the very beginning, for initiating `User` score attrs
+
+    :param participants: product of `getShadeParticipants()`
+    '''
+    p = participants
+    _avr = sum([i[1] for i in p]) / len(p)
+    for i in p:
+        if abs(i[1]-_avr) < 1:
+            i[0].bonus_score = 5
+        elif 1 <= abs(i[1]-_avr) < 2:
+            i[0].bonus_score = 3
+        elif abs(i[1]-_avr) > 2:
+            i[0].bonus_score = 1
 
 
 def leaderboard(msg, day: str='today'):
@@ -161,9 +194,17 @@ def leaderboard(msg, day: str='today'):
     bs = getBiggestShade(shades)
     ls = getLongestShade(shades)
 
+    # init
+    initUserScore(group)
     # basic
-    for u in group.members:
-        for lattice in bs[0]:
-            u.show_ups.count(lattice)
 
     # bonus
+    bs_participants = getShadeParticipants(group, bs[0])
+    for u in getShadeParticipants(group, bs[0]):
+        u[0].bonus_score += bs[1] / \
+            len(bs_participants) * (1 - (random.random()/len(bs_participants)))
+
+    ls_participants = getShadeParticipants(group, ls[0])
+    for u in getShadeParticipants(group, ls[0]):
+        u.bonus_score += len(ls[0]) / \
+            len(ls_participants) * (1 - (random.random()/len(ls_participants)))
