@@ -1,3 +1,6 @@
+import re
+
+
 class Query():
     '''
     :param msg: `obj` wxpy.Message object
@@ -7,6 +10,7 @@ class Query():
                 '今日关键词',
                 '全部关键词',
                 '在吗',
+                '积分榜'
                 ]
 
     def __init__(self, msg):
@@ -15,6 +19,8 @@ class Query():
             if c in msg.text:
                 self.command = c
         self.isCommand(msg)
+        if self.parseDate(msg):
+            self.day = self.parseDate(msg)
 
     @classmethod
     def isCommand(self, msg):
@@ -25,6 +31,9 @@ class Query():
                 separator = ' '
 
             if len(msg.text.split(separator)) == 2:
-                if msg.text.split(separator)[1] == '在吗':
+                if msg.text.split(separator)[1] in self.commands:
                     self.name = msg.text.split(separator)[0].replace('@', '')
                     return True
+
+    def parseDate(self, msg):
+        return re.search(r'20\d\d\d\d\d\d', msg.text).group()

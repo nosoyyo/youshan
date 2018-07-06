@@ -3,7 +3,6 @@ import random
 from functools import reduce
 
 from utils import formatToday
-from models import theGroup
 
 
 def avr(l: list) -> float:
@@ -222,3 +221,19 @@ def leaderboard(group, day: str='today'):
     addBonusScore(ls_participants)
 
     return group
+
+
+def parse(group, day):
+    '''
+    Parse the `group` that `leaderboard` produced
+    Return the text which `send` needs
+    '''
+    leaderboard_title = f'{day} 积分榜 \n'
+    raw_data = sorted([(u.basic_score+u.bonus_score, u.name)
+                       for u in group.members])
+    contents = []
+    for i in range(len(raw_data)):
+        item = raw_data.pop()
+        content = f'#{i+1} {item[1]} 老师 {item[0]:.2f} 分'
+        contents.append(content)
+    return leaderboard_title + '\n'.join(contents)
