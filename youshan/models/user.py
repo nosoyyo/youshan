@@ -33,7 +33,6 @@ class User(Base):
             else:
                 member = intake
 
-        self.puid = member.puid
         self.name = member.name
         self.nick_name = member.nick_name
 

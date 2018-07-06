@@ -43,21 +43,6 @@ def buildLattice(day: str='today') -> list:
     return [start + i*300 for i in range(n_lattice)]
 
 
-def countUserShowUps(user, day: str='today') -> list:
-    '''
-    Return a `list` of all the lattices a user has appeared
-    '''
-    if day is 'today':
-        day = formatToday()
-
-    user.buildUserCorpus(day)
-    lattices = buildLattice(day)
-    # :key: `timestamp`
-    user.show_ups = [lattices.index(
-        [i for i in lattices if i < key][-1]) for key in user.corpus_keys]
-    return user.show_ups
-
-
 def buildShades(group, day: str='today'):
 
     # every user's show_ups in their lists respectively
@@ -87,7 +72,22 @@ def buildShades(group, day: str='today'):
     return shades
 
 
-def countShadeShowUps(shade: list):
+def countUserShowUps(user, day: str='today') -> list:
+    '''
+    Return a `list` of all the lattices a user has appeared
+    '''
+    if day is 'today':
+        day = formatToday()
+
+    user.buildUserCorpus(day)
+    lattices = buildLattice(day)
+    # :key: `timestamp`
+    user.show_ups = [lattices.index(
+        [i for i in lattices if i < key][-1]) for key in user.corpus_keys]
+    return user.show_ups
+
+
+def countShadeShowUps(group, shade: list):
     '''
     Count all the `show_up`s with in a certain shade
 
@@ -101,7 +101,7 @@ def countShadeShowUps(shade: list):
     return show_ups
 
 
-def getBiggestShade(shades: list) -> tuple:
+def getBiggestShade(group, shades: list) -> tuple:
     '''
     Return a tuple of two elements
     :tuple[0]: a `list` of lattices, therefore a shade
@@ -111,13 +111,13 @@ def getBiggestShade(shades: list) -> tuple:
     '''
     result = {}
     for shade in shades:
-        result.update({shade[0]: countShadeShowUps(shade)})
+        result.update({shade[0]: countShadeShowUps(group, shade)})
     key = [key for key in result.keys() if result[key] ==
            sorted(list(result.values()))[-1]][0]
     return ([i for i in shades if i and i[0] == key][0], result[key])
 
 
-def getLongestShade(shades: list) -> tuple:
+def getLongestShade(group, shades: list) -> tuple:
     '''
     Return a `tuple` of two elements
     :tuple[0]: a `list` of lattices, therefore a shade
@@ -131,7 +131,7 @@ def getLongestShade(shades: list) -> tuple:
     key = [key for key in result.keys() if result[key] ==
            sorted(list(result.values()))[-1]][0]
     shade = [i for i in shades if i and i[0] == key][0]
-    return (shade, countShadeShowUps(shade))
+    return (shade, countShadeShowUps(group, shade))
 
 
 def getShadeParticipants(group, shade: list) -> dict:
@@ -152,6 +152,11 @@ def getShadeParticipants(group, shade: list) -> dict:
     return list(set([(i, participants.count(i)) for i in participants]))
 
 
+def initUserShowUps(group, day: str='today'):
+    for u in group.members:
+        countUserShowUps(u, day)
+
+
 def initUserScore(group):
     for u in group.members:
         u.basic_score = 0
@@ -159,14 +164,17 @@ def initUserScore(group):
 
 
 def addBasicScore(group):
+
+    # show_ups
     for u in group.members:
         u.basic_score += len(set(u.show_ups)) / \
             (1+random.random()/len(group.members))
+        u.basic_score += len(u.show_ups) * 0.1
 
 
 def addBonusScore(participants):
     '''
-    Must do this at the very beginning, for initiating `User` score attrs
+    this is for bs
 
     :param participants: product of `getShadeParticipants()`
     '''
@@ -181,24 +189,24 @@ def addBonusScore(participants):
             i[0].bonus_score = 1
 
 
-def leaderboard(msg, day: str='today'):
+def leaderboard(group, day: str='today'):
     '''
     '''
-    group = theGroup(msg)
 
     if day is 'today':
         day = formatToday()
 
     # build shades
     shades = buildShades(group, day)
-    bs = getBiggestShade(shades)
-    ls = getLongestShade(shades)
+    bs = getBiggestShade(group, shades)
+    ls = getLongestShade(group, shades)
 
     # init
     initUserScore(group)
     # basic
+    addBasicScore(group)
 
-    # bonus
+    # bs/ls bonus
     bs_participants = getShadeParticipants(group, bs[0])
     for u in getShadeParticipants(group, bs[0]):
         u[0].bonus_score += bs[1] / \
@@ -206,5 +214,11 @@ def leaderboard(msg, day: str='today'):
 
     ls_participants = getShadeParticipants(group, ls[0])
     for u in getShadeParticipants(group, ls[0]):
-        u.bonus_score += len(ls[0]) / \
+        u[0].bonus_score += len(ls[0]) / \
             len(ls_participants) * (1 - (random.random()/len(ls_participants)))
+
+    # participation bonus
+    addBonusScore(bs_participants)
+    addBonusScore(ls_participants)
+
+    return group
