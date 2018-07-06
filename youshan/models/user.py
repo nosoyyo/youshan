@@ -54,13 +54,16 @@ class User(Base):
     def __repr__(self):
         return f'<User instance of {self.nick_name}>'
 
-    def buildUserCorpus(self, day: str=formatToday()):
+    def buildUserCorpus(self, day: str='today'):
         '''
         Must has `uuid`
         Manually zip(self.corpus_keys, self.corpus_values) when using
 
         :param day: like `20180705`
         '''
+        if day is 'today':
+            day = formatToday()
+
         if not hasattr(self, 'uuid'):
             try:
                 self.group.getUserUUID(self)

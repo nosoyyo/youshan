@@ -5,7 +5,7 @@ from models import User, Query, theGroup
 from storage import persistize
 from stats import stats, getTiming
 from youshan import aloha, reLogin
-from contribution import contrib
+from pbl import leaderboard
 
 
 DGBUG = True
@@ -35,8 +35,8 @@ def deal(msg):
                 msg.member.group.send(stats(msg, User(msg)))
             elif '群统计' in query.command:
                 msg.member.group.send(stats(msg))
-            elif '贡献值' in query.command:
-                msg.member.group.send(contrib(msg))
+            elif '积分榜' in query.command:
+                msg.member.group.send(leaderboard(msg))
             else:
                 time.sleep(0.5)
                 msg.member.group.send('你想干啥？')
