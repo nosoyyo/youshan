@@ -51,13 +51,13 @@ def countUserShowUps(user, day: str='today') -> list:
 
     user.buildUserCorpus(day)
     lattices = buildLattice(day)
+    # :key: `timestamp`
     user.show_ups = [lattices.index(
         [i for i in lattices if i < key][-1]) for key in user.corpus_keys]
     return user.show_ups
 
 
-def buildShades(msg, day: str='today'):
-    group = theGroup(msg)
+def buildShades(group, day: str='today'):
 
     # every user's show_ups in their lists respectively
     alls = list(map(lambda x: countUserShowUps(
@@ -118,11 +118,11 @@ def getBiggestShade(shades: list) -> tuple:
 
 def getLongestShade(shades: list) -> tuple:
     '''
-    Return a tuple of two elements
+    Return a `tuple` of two elements
     :tuple[0]: a `list` of lattices, therefore a shade
     :tuple[1]: the score of the shade
 
-    :param shades: `list` of a `list`
+    :param shades: `list` of `list` of `lattice`
     '''
     result = {}
     for shade in shades:
@@ -131,6 +131,21 @@ def getLongestShade(shades: list) -> tuple:
            sorted(list(result.values()))[-1]][0]
     shade = [i for i in shades if i and i[0] == key][0]
     return (shade, countShadeShowUps(shade))
+
+
+def getShadeParticipants(group, shade: list) -> dict:
+    '''
+    Return a `list` of `User` take part in `shade`
+
+    :param shade: `list` of `lattice`
+    '''
+    participants = []
+    for u in group.members:
+        for lattice in shade:
+            if lattice in u.show_ups:
+                participants.append(u)
+
+    return list(set([(i, participants.count(i)) for i in participants]))
 
 
 def leaderboard(msg, day: str='today'):
@@ -142,7 +157,7 @@ def leaderboard(msg, day: str='today'):
         day = formatToday()
 
     # build shades
-    shades = buildShades(msg, day)
+    shades = buildShades(group, day)
     bs = getBiggestShade(shades)
     ls = getLongestShade(shades)
 
