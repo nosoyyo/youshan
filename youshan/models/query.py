@@ -1,11 +1,17 @@
 import re
+import time
 
+from stats import stats
+from models import User
+from history import History
 from utils import formatToday
+from pbl import leaderboard, scoreDetails
 
 
 class Query():
     '''
     :param msg: `obj` wxpy.Message object
+    :param group: `obj` necessary when in need to `deliver`
     '''
     commands = ['在吗',
 
@@ -21,8 +27,14 @@ class Query():
                 '历史群名',
                 ]
 
-    def __init__(self, msg):
+    def __init__(self, msg, group=None):
+        self.msg = msg
         self.command = None
+        self.deliverToMember = msg.member.send
+        if group:
+            self.group = group
+            self.deliverToGroup = msg.member.group.send
+
         for c in self.commands:
             if c in msg.text:
                 self.command = c
@@ -49,3 +61,19 @@ class Query():
             return formatToday()
         else:
             return match.group()
+
+    def deliver(self):
+        if '我的统计' in self.command:
+            self.deliverToGroup(stats(self.msg, User(self.msg)))
+        elif '群统计' in self.command:
+            self.deliverToGroup(stats(self.msg))
+        elif '积分榜' in self.command:
+            self.deliverToGroup(leaderboard(self.group, self.day))
+        elif '我的积分' in self.command:
+            self.deliverToMember(scoreDetails(User(self.msg)))
+        elif '历史群名' in self.command:
+            self.deliverToGroup(History.getHistoryGroupName(self.group))
+
+        else:
+            time.sleep(0.5)
+            self.deliverToGroup('你想干啥？')
