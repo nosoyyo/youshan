@@ -188,7 +188,7 @@ def addBonusScore(participants):
             i[0].bonus_score = 1
 
 
-def leaderboard(group, day: str='today'):
+def leaderboard(group, day: str='today') -> str:
     '''
     '''
 
@@ -220,10 +220,10 @@ def leaderboard(group, day: str='today'):
     addBonusScore(bs_participants)
     addBonusScore(ls_participants)
 
-    return group
+    return parse(group, day)
 
 
-def parse(group, day):
+def parse(group, day: str) -> str:
     '''
     Parse the `group` that `leaderboard` produced
     Return the text which `send` needs
@@ -237,3 +237,8 @@ def parse(group, day):
         content = f'#{i+1} {item[1]} 老师 {item[0]:.2f} 分'
         contents.append(content)
     return leaderboard_title + '\n'.join(contents)
+
+
+
+def scoreDetails():
+    pass

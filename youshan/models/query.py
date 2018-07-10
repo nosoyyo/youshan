@@ -1,16 +1,24 @@
 import re
 
+from utils import formatToday
+
 
 class Query():
     '''
     :param msg: `obj` wxpy.Message object
     '''
-    commands = ['我的统计',
+    commands = ['在吗',
+
                 '群统计',
+                '我的统计',
+
                 '今日关键词',
                 '全部关键词',
-                '在吗',
-                '积分榜'
+
+                '积分榜',
+                '我的积分',
+
+                '历史群名',
                 ]
 
     def __init__(self, msg):
@@ -36,4 +44,8 @@ class Query():
                     return True
 
     def parseDate(self, msg):
-        return re.search(r'20\d\d\d\d\d\d', msg.text).group()
+        match = re.search(r'20\d\d\d\d\d\d', msg.text)
+        if not hasattr(match, 'group'):
+            return formatToday()
+        else:
+            return match.group()

@@ -1,11 +1,12 @@
 import time
 from wxpy import Bot, Group
 
-from models import User, Query, theGroup
+from history import History
 from storage import persistize
 from stats import stats, getTiming
 from youshan import aloha, reLogin
-from pbl import leaderboard, parse
+from models import User, Query, theGroup
+from pbl import leaderboard, scoreDetails
 
 
 DGBUG = True
@@ -14,30 +15,35 @@ bot = Bot(cache_path=True, login_callback=aloha, logout_callback=reLogin)
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
-    the_group = theGroup.getTheGroup(msg)
+    group = theGroup.getTheGroup(msg)
+    group.send = msg.member.group.send
     # register & init group
     # if msg.text == '开启统计功能':
-    #     the_group.send(registerGroup(msg, 'on'))
+    #     group.send(registerGroup(msg, 'on'))
     # elif msg.text == '关闭统计功能':
-    #     the_group.send(registerGroup(msg, 'off'))
+    #     group.send(registerGroup(msg, 'off'))
 
-    if theGroup(msg.member.group) == the_group:
+    if theGroup(msg.member.group) == group:
+        time.sleep(0.5)
         print(msg)
         persistize(msg)
         if msg.text is not None and '在吗' in msg.text:
             if Query.isCommand(msg):
-                msg.member.group.send(getTiming(User(msg)))
-                return
+                return getTiming(User(msg))
+
         elif msg.is_at:
-            time.sleep(0.5)
             query = Query(msg)
             if '我的统计' in query.command:
-                msg.member.group.send(stats(msg, User(msg)))
+                group.send(stats(msg, User(msg)))
             elif '群统计' in query.command:
-                msg.member.group.send(stats(msg))
+                group.send(stats(msg))
             elif '积分榜' in query.command:
-                group = theGroup(msg)
-                msg.member.group.send(parse(leaderboard(group, query.day)))
+                group.send(leaderboard(group, query.day))
+            elif '我的积分' in query.command:
+                msg.member.send(scoreDetails(User(msg)))
+            elif '历史群名' in query.command:
+                group.send(History.getHistoryGroupName(group))
+
             else:
                 time.sleep(0.5)
-                msg.member.group.send('你想干啥？')
+                group.send('你想干啥？')
