@@ -9,4 +9,6 @@ class History():
     @classmethod
     def getHistoryGroupName(cls, group):
         raw = r.hgetall('group_name_history')
-        content = []
+        content = [(formatToday(timestamp=float(i[0])), i[1])
+                   for i in raw.items()]
+        return '\n'.join([' '.join(i) for i in content])
