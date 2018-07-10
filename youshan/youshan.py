@@ -4,7 +4,7 @@ from wxpy import Bot, Group
 from history import History
 from storage import persistize
 from stats import stats, getTiming
-from youshan import aloha, reLogin
+from utils import aloha, reLogin
 from models import User, Query, theGroup
 from pbl import leaderboard, scoreDetails
 

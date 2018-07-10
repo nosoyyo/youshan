@@ -5,4 +5,5 @@ class History():
 
     @classmethod
     def getHistoryGroupName(cls, group):
-        r = group.r
+        raw = r.hgetall('group_name_history')
+        
