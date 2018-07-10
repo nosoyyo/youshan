@@ -28,13 +28,17 @@ class Query():
                 ]
     funcs = []
 
+    emojiDict = {
+        '#1': '🥇',
+        '#2': '🥈',
+        '#3': '🥉',
+    }
+
     def __init__(self, msg, group=None):
         self.msg = msg
         self.command = None
-        self.deliverToMember = msg.member.send
         if group:
             self.group = group
-            self.deliverToGroup = msg.member.group.send
 
         for c in self.commands:
             if c in msg.text:
@@ -63,23 +67,41 @@ class Query():
         else:
             return match.group()
 
+    def replaceEmoji(self, payload):
+        for key in self.emojiDict.keys():
+            if key in payload:
+                payload = payload.replace(key, self.emojiDict[key])
+
     def deliver(self):
         if '我的统计' in self.command:
-            self.deliverToGroup(stats(self.msg, User(self.msg)))
+            payload = stats(self.msg, User(self.msg))
+            send = self.msg.group.send
         elif '在吗' in self.command:
-            self.deliverToGroup(getTiming(User(self.msg)))
+            payload = getTiming(User(self.msg))
+            send = self.msg.group.send
         elif '群统计' in self.command:
-            self.deliverToGroup(stats(self.msg))
+            payload = stats(self.msg)
+            send = self.msg.group.send
         elif '积分榜' in self.command:
-            self.deliverToGroup(leaderboard(self.group, self.day))
+            payload = leaderboard(self.group, self.day)
+            send = self.msg.group.send
         elif '我的积分' in self.command:
-            self.deliverToMember(scoreDetails(User(self.msg)))
+            payload = scoreDetails(User(self.msg))
+            send = self.msg.member.send
         elif '历史群名' in self.command:
-            self.deliverToGroup(History.getHistoryGroupName(self.group))
+            payload = History.getHistoryGroupName(self.group)
+            send = self.msg.group.send
 
         else:
             time.sleep(0.5)
-            self.deliverToGroup('你想干啥？')
+            payload = '你想干啥？'
+            send = self.msg.group.send
+
+        # final make up just before launch
+        payload = self.replaceEmoji(payload)
+
+        # fire!
+        send(payload)
 
     # functioning part
     # register & init group

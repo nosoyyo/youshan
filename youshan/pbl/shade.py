@@ -41,6 +41,18 @@ def buildLattice(day: str='today') -> list:
     return [start + i*300 for i in range(n_lattice)]
 
 
+def getSecByLattice(lattice: int, day: str='today') -> float:
+    '''
+
+    :param lattice: `int`, range(288)
+    '''
+    if lattice in range(288):
+        if day is 'today':
+            day = formatToday()
+        start = getStartSecOfTheDay(day)
+        return start + lattice*300
+
+
 def buildShades(group, day: str='today'):
 
     # every user's show_ups in their lists respectively

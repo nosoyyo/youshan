@@ -81,6 +81,6 @@ class theGroup(Base):
 
     @classmethod
     def getUserUUID(cls, user) -> str:
-        # self.group need to be dynamically loaded
+        # user.group need to be dynamically loaded
         user.uuid = cls.r.hget(cls.uuid, user.remark_name)
         return user.uuid
