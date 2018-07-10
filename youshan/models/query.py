@@ -71,37 +71,37 @@ class Query():
         for key in self.emojiDict.keys():
             if key in payload:
                 payload = payload.replace(key, self.emojiDict[key])
+        return payload
 
     def deliver(self):
         if '我的统计' in self.command:
             payload = stats(self.msg, User(self.msg))
-            send = self.msg.group.send
+            send = self.msg.member.group.send
         elif '在吗' in self.command:
             payload = getTiming(User(self.msg))
-            send = self.msg.group.send
+            send = self.msg.member.group.send
         elif '群统计' in self.command:
             payload = stats(self.msg)
-            send = self.msg.group.send
+            send = self.msg.member.group.send
         elif '积分榜' in self.command:
             payload = leaderboard(self.group, self.day)
-            send = self.msg.group.send
+            send = self.msg.member.group.send
         elif '我的积分' in self.command:
             payload = scoreDetails(User(self.msg))
             send = self.msg.member.send
         elif '历史群名' in self.command:
             payload = History.getHistoryGroupName(self.group)
-            send = self.msg.group.send
+            send = self.msg.member.group.send
 
         else:
             time.sleep(0.5)
             payload = '你想干啥？'
-            send = self.msg.group.send
+            send = self.msg.member.group.send
 
         # final make up just before launch
-        payload = self.replaceEmoji(payload)
-
-        # fire!
-        send(payload)
+        if payload:
+            payload = self.replaceEmoji(payload)
+            send(payload)
 
     # functioning part
     # register & init group

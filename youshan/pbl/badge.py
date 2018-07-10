@@ -28,11 +28,13 @@ class Badge:
     def iceBreakingBadge(self):
         '''
         「破冰者」：一段空白(至少半小时)后第一位发言者
+        「破冰大师」：连续 3 天拥有此勋章
+        「破冰王者」：一月内累计 20 天
         '''
         self.user.iceBreakingBadges = []
         self.user.buildUserCorpus(day='today')
         self.user_corpus = list(self.user.corpus_values)
-        first_in_shades = [i[0] for i in self.shades]
+        first_in_shades = [i[0] for i in self.shades if len(i) > 3]
         candidates = list(
             set([i for i in self.user.show_ups if i in first_in_shades]))
         if candidates:
