@@ -1,7 +1,8 @@
 import time
+from datetime import datetime, timedelta
 
 
-def formatToday(timetuple=None, timestamp=None) -> str:
+def formatToday(timetuple=None, timestamp=None, day: str=None) -> str:
     '''
     Arg(s) must be explicitly named.
     '''
@@ -9,6 +10,9 @@ def formatToday(timetuple=None, timestamp=None) -> str:
         ahora = timetuple
     elif timestamp:
         ahora = time.localtime(timestamp)
+    elif day == 'yesterday':
+        yesterday = datetime.today() + timedelta(days=-1)
+        ahora = time.localtime(yesterday.timestamp())
     else:
         ahora = time.localtime()
 

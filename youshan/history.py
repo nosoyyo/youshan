@@ -8,7 +8,11 @@ class History():
 
     @classmethod
     def getHistoryGroupName(cls, group):
-        raw = r.hgetall('group_name_history')
+        raw = group.r.hgetall('group_name_history')
         content = [(formatToday(timestamp=float(i[0])), i[1])
                    for i in raw.items()]
         return '\n'.join([' '.join(i) for i in content])
+
+    @classmethod
+    def getUserHistotyScore(cls, user):
+        pass
