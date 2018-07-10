@@ -1,10 +1,10 @@
 import re
 import time
 
-from stats import stats
 from models import User
 from history import History
 from utils import formatToday
+from stats import stats, getTiming
 from pbl import leaderboard, scoreDetails
 
 
@@ -26,6 +26,7 @@ class Query():
 
                 '历史群名',
                 ]
+    funcs = []
 
     def __init__(self, msg, group=None):
         self.msg = msg
@@ -65,6 +66,8 @@ class Query():
     def deliver(self):
         if '我的统计' in self.command:
             self.deliverToGroup(stats(self.msg, User(self.msg)))
+        elif '在吗' in self.command:
+            self.deliverToGroup(getTiming(User(self.msg)))
         elif '群统计' in self.command:
             self.deliverToGroup(stats(self.msg))
         elif '积分榜' in self.command:
@@ -77,3 +80,10 @@ class Query():
         else:
             time.sleep(0.5)
             self.deliverToGroup('你想干啥？')
+
+    # functioning part
+    # register & init group
+    # if msg.text == '开启统计功能':
+    #     group.send(registerGroup(msg, 'on'))
+    # elif msg.text == '关闭统计功能':
+    #     group.send(registerGroup(msg, 'off'))
