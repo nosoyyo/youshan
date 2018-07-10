@@ -1,5 +1,4 @@
 import time
-from uuid import uuid4
 
 from models import User, theGroup
 from utils import formatToday
@@ -55,17 +54,18 @@ def persistize(msg):
     recv_time = time.time()
     user = User(msg)
     user.group = theGroup(user.group)
+    user.uuid = theGroup.getUserUUID(user)
     try:
         if user.r.hset(user.group.uuid, recv_time, msg.text):
-            user.uuid = user.r.hget(
-                user.group.uuid, user.nick_name) or uuid4().__str__()
             user.r.rpush(f'{user.uuid}{formatToday()}', recv_time)
             user.r.zincrby(f'{user.group.uuid}{formatToday()}freq', user.uuid)
             user.r.zincrby(
                 f'{user.group.uuid}{formatToday()}freq', user.group.uuid)
+
+        # store historical group name
+        if msg.member.group.name != list(
+                user.r.hvals('group_name_history'))[-1]:
+            user.r.hset('group_name_history', recv_time, msg.member.group.name)
+
     except Exception as e:
         print(e)
-
-
-def migrate():
-    pass
