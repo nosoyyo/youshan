@@ -18,6 +18,9 @@ def check_badges(group):
     for u in group.members:
         Badge(u)
         BADGES_CHECKED_ON = time.time()
+    hour = time.localtime(BADGES_CHECKED_ON).tm_hour
+    mins = time.localtime(BADGES_CHECKED_ON).tm_min
+    print(f'checked {group} for badges on {hour}:{mins}.')
     return True
 
 

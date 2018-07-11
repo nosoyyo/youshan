@@ -34,11 +34,10 @@ class Query():
         '#3': '🥉',
     }
 
-    def __init__(self, msg, group=None):
+    def __init__(self, msg, group):
         self.msg = msg
         self.command = None
-        if group:
-            self.group = group
+        self.group = group
 
         for c in self.commands:
             if c in msg.text:
@@ -101,6 +100,7 @@ class Query():
         # final make up just before launch
         if payload:
             payload = self.replaceEmoji(payload)
+            print(f'sending payload: \n{payload}')
             send(payload)
 
     # functioning part
