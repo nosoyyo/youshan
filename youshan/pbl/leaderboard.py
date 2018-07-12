@@ -42,7 +42,7 @@ def addBonusScore(participants):
             i[0].bonus_score = 1
 
 
-def leaderboard(group, day: str='today') -> str:
+def leaderboard(msg, group, day: str='today') -> str:
     '''
     '''
 

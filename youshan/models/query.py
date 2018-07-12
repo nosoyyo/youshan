@@ -1,10 +1,8 @@
 import re
-import time
 
-from models import User
 from history import History
 from utils import formatToday
-from stats import stats, getTiming
+from stats import groupStats, userStats, getTiming
 from pbl import leaderboard, scoreDetails
 
 
@@ -13,19 +11,20 @@ class Query():
     :param msg: `obj` wxpy.Message object
     :param group: `obj` necessary when in need to `deliver`
     '''
-    commands = ['在吗',
+    commands = {'在吗': getTiming,
 
-                '群统计',
-                '我的统计',
+                '群统计': groupStats,
+                '群排名': groupStats,
+                '群排行': groupStats,
+                '我的统计': userStats,
 
-                '今日关键词',
-                '全部关键词',
+                '积分榜': leaderboard,
+                '群积分': leaderboard,
+                '群榜单': leaderboard,
+                '我的积分': scoreDetails,
 
-                '积分榜',
-                '我的积分',
-
-                '历史群名',
-                ]
+                '历史群名': History.getHistoryGroupName,
+                }
     funcs = []
 
     emojiDict = {
@@ -35,16 +34,16 @@ class Query():
     }
 
     def __init__(self, msg, group):
-        self.msg = msg
         self.command = None
+        self.day = self.parseDate(msg)
         self.group = group
+        self.msg = msg
+        self.send = msg.member.group.send
 
-        for c in self.commands:
+        for c in self.commands.keys():
             if c in msg.text:
-                self.command = c
+                self.command = self.commands[c]
         self.isCommand(msg)
-        if self.parseDate(msg):
-            self.day = self.parseDate(msg)
 
     @classmethod
     def isCommand(self, msg):
@@ -55,7 +54,7 @@ class Query():
                 separator = ' '
 
             if len(msg.text.split(separator)) == 2:
-                if msg.text.split(separator)[1] in self.commands:
+                if msg.text.split(separator)[1] in self.commands.keys():
                     self.name = msg.text.split(separator)[0].replace('@', '')
                     return True
 
@@ -73,35 +72,13 @@ class Query():
         return payload
 
     def deliver(self):
-        if '我的统计' in self.command:
-            payload = stats(self.msg, User(self.msg))
-            send = self.msg.member.group.send
-        elif '在吗' in self.command:
-            payload = getTiming(User(self.msg))
-            send = self.msg.member.group.send
-        elif '群统计' in self.command:
-            payload = stats(self.msg)
-            send = self.msg.member.group.send
-        elif '积分榜' in self.command:
-            payload = leaderboard(self.group, self.day)
-            send = self.msg.member.group.send
-        elif '我的积分' in self.command:
-            payload = scoreDetails(User(self.msg))
-            send = self.msg.member.send
-        elif '历史群名' in self.command:
-            payload = History.getHistoryGroupName(self.group)
-            send = self.msg.member.group.send
-
-        else:
-            time.sleep(0.5)
-            payload = '你想干啥？'
-            send = self.msg.member.group.send
+        payload = self.command(self.msg, self.group, self.day)
 
         # final make up just before launch
         if payload:
             payload = self.replaceEmoji(payload)
             print(f'sending payload: \n{payload}')
-            send(payload)
+            self.send(payload)
 
     # functioning part
     # register & init group
