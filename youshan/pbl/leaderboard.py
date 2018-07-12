@@ -42,7 +42,7 @@ def addBonusScore(participants):
             i[0].bonus_score = 1
 
 
-def leaderboard(group, day: str='today') -> str:
+def leaderboard(msg, group, day: str='today') -> str:
     '''
     '''
 
@@ -82,6 +82,10 @@ def parse(group, day: str) -> str:
     Parse the `group` that `leaderboard` produced
     Return the text which `send` needs
     '''
+    for u in group.members:
+        if hasattr(u, 'iceBreakingBadges') and u.iceBreakingBadges:
+            if '🏅' not in u.name:
+                u.name = '🏅' + u.name
     leaderboard_title = f'{day} 积分榜 \n'
     raw_data = sorted([(u.basic_score+u.bonus_score, u.name)
                        for u in group.members])
@@ -90,6 +94,7 @@ def parse(group, day: str) -> str:
         item = raw_data.pop()
         content = f'#{i+1} {item[1]} 老师 {item[0]:.2f} 分'
         contents.append(content)
+
     return leaderboard_title + '\n'.join(contents)
 
 

@@ -1,49 +1,48 @@
 import time
 from wxpy import Bot, Group
 
-from history import History
+from pbl import Badge
 from storage import persistize
-from stats import stats, getTiming
 from utils import aloha, reLogin
-from models import User, Query, theGroup
-from pbl import leaderboard, scoreDetails
+from models import Query, theGroup
 
 
 DGBUG = True
+LATTICE = 300
+BADGES_CHECKED_ON = None
 bot = Bot(cache_path=True, login_callback=aloha, logout_callback=reLogin)
+
+
+def check_badges(group):
+    global BADGES_CHECKED_ON
+    for u in group.members:
+        Badge(u)
+        BADGES_CHECKED_ON = time.time()
+    hour = time.localtime(BADGES_CHECKED_ON).tm_hour
+    mins = time.localtime(BADGES_CHECKED_ON).tm_min
+    print(f'checked {group} for badges on {hour}:{mins}.')
+    return True
 
 
 @bot.register(Group, None, except_self=False)
 def deal(msg):
     group = theGroup.getTheGroup(msg)
-    group.send = msg.member.group.send
-    # register & init group
-    # if msg.text == '开启统计功能':
-    #     group.send(registerGroup(msg, 'on'))
-    # elif msg.text == '关闭统计功能':
-    #     group.send(registerGroup(msg, 'off'))
 
     if theGroup(msg.member.group) == group:
-        time.sleep(0.5)
+        # check badges every secs
+        global BADGES_CHECKED_ON
+        if not BADGES_CHECKED_ON:
+            check_badges(group)
+        elif time.time() - BADGES_CHECKED_ON >= LATTICE:
+            check_badges(group)
+        else:
+            time.sleep(0.5)
+
         print(msg)
         persistize(msg)
-        if msg.text is not None and '在吗' in msg.text:
-            if Query.isCommand(msg):
-                return getTiming(User(msg))
-
-        elif msg.is_at:
-            query = Query(msg)
-            if '我的统计' in query.command:
-                group.send(stats(msg, User(msg)))
-            elif '群统计' in query.command:
-                group.send(stats(msg))
-            elif '积分榜' in query.command:
-                group.send(leaderboard(group, query.day))
-            elif '我的积分' in query.command:
-                msg.member.send(scoreDetails(User(msg)))
-            elif '历史群名' in query.command:
-                group.send(History.getHistoryGroupName(group))
-
-            else:
-                time.sleep(0.5)
-                group.send('你想干啥？')
+        if msg.is_at:
+            query = Query(msg, group)
+            query.deliver()
+        elif msg.text is not None and Query.isCommand(msg):
+            query = Query(msg, group)
+            query.deliver()

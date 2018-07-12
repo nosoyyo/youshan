@@ -7,7 +7,7 @@ class History():
         self.group = group
 
     @classmethod
-    def getHistoryGroupName(cls, group):
+    def getHistoryGroupName(cls, msg, group, day):
         raw = group.r.hgetall('group_name_history')
         content = [(formatToday(timestamp=float(i[0])), i[1])
                    for i in raw.items()]

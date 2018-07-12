@@ -20,7 +20,7 @@ def reLogin():
     print('LOGGEDIN is ' + str(LOGGEDIN))
     time.sleep(1)
     for i in range(len(RETRY_LOGIN)):
-        bot = Bot(cache_path=True, login_callback=aloha,
-                  logout_callback=reLogin)
+        Bot(cache_path=True, login_callback=aloha,
+            logout_callback=reLogin)
         if LOGGEDIN:
             break
